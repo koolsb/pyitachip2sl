@@ -1,0 +1,3 @@
+{
+  "tests/test_pyitachip2sl.py::TestITachIP2SLSocketClient::test_send_data": true
+}
