@@ -21,14 +21,31 @@ class ITachIP2SLSocketClient(object):
         self.socket.settimeout(timeout)
         self.socket.connect((self.host, self.port))
 
-    def send_data(self, data):
+        # Flush any login banner messages
+        try:
+            self.socket.recv(self._socket_recv)
+
+        except socket.timeout as e:
+            return
+
+    def send_data(self, data, raw=False):
         """
         Send data to socket.
         """
-        if data.startswith('0x'):
-            data = bytes.fromhex(data[2:].rstrip())
+        if raw:
+            try:
+                data = bytes.fromhex(data)
+
+            except ValueError as e:
+                _LOGGER.debug("Invalid data received: " + str(e))
+                return
         else:
-            data = data.encode('ascii')
+            try:
+                data = data.encode('ascii')
+
+            except UnicodeEncodeError as e:
+                _LOGGER.debug("Invalid data received: " + str(e))
+                return
 
         _LOGGER.debug("Sending data: " + str(data))
         self.socket.send(data)
@@ -36,8 +53,13 @@ class ITachIP2SLSocketClient(object):
         try:
             response = self.socket.recv(self._socket_recv)
             _LOGGER.debug("Received response: " + str(response))
+            return response.decode('ascii')
 
-            return response.decode('ascii').strip()
+        except UnicodeDecodeError:
+            newresponse = str()
+            for c in response:
+                newresponse += hex(c)
+            return newresponse
         
         except socket.timeout as e:
             _LOGGER.debug("Socket timeout. Error: " + str(e))

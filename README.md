@@ -21,6 +21,6 @@ itach.send_data("Status1.")
 response = itach.send_data("Status1.")
 print(response)
 
-# Send HEX command
-itach.send_data("0x537461747573312e")
+# Send raw data
+itach.send_data("082200000002D4", True)
 ```
